@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Country Insights</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="js/countryInsights.js" defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .chart {
+            flex: 1 1 calc(33% - 20px);
+            margin: 10px;
+            height: 400px;
+            overflow: hidden;
+        }
+        svg {
+            overflow: visible;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="country-title">Country Insights</h1>
+    <div class="row">
+        <div id="bar-chart-1" class="chart"></div>
+        <div id="bar-chart-2" class="chart"></div>
+        <div id="bar-chart-3" class="chart"></div>
+    </div>
+    <div class="row">
+        <div id="box-plot" class="chart"></div>
+        <div id="line-chart" class="chart"></div>
+    </div>
+</body>
+</html>
