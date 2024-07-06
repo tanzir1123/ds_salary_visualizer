@@ -284,11 +284,12 @@ function createBoxPlot(data, groupField, valueField, selector) {
 }
 
 function createLineChart(data, xField, yField, selector) {
-    const groupedData = Array.from(d3.group(data, d => d.work_setting), ([workSetting, values]) => ({
+    // Group the data by work_setting and then by work_year, calculating the average salary
+    const nestedData = Array.from(d3.group(data, d => d.work_setting), ([workSetting, values]) => ({
         workSetting,
-        values: Array.from(d3.group(values, d => d[xField]), ([key, value]) => ({
-            key: new Date(key, 0, 1), // Convert year to Date object
-            value: d3.mean(value, d => +d[yField])
+        values: Array.from(d3.rollup(values, v => d3.mean(v, d => +d[yField]), d => d[xField]), ([key, value]) => ({
+            key: +key,
+            value: +value
         })).sort((a, b) => a.key - b.key) // Sort values by xField
     }));
 
@@ -302,38 +303,44 @@ function createLineChart(data, xField, yField, selector) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scaleTime().range([0, width]); // Use time scale for x-axis
+    const x = d3.scaleLinear().range([0, width]);
     const y = d3.scaleLinear().range([height, 0]);
 
-    x.domain([
-        d3.min(groupedData, group => d3.min(group.values, d => d.key)),
-        d3.max(groupedData, group => d3.max(group.values, d => d.key))
-    ]);
-    y.domain([
-        0, 
-        d3.max(groupedData, group => d3.max(group.values, d => d.value))
-    ]);
+    const color = d3.scaleOrdinal(d3.schemeCategory10); // Color scheme for different work settings
+
+    // Flatten the data for setting the domains
+    const allYears = new Set();
+    const allValues = [];
+    nestedData.forEach(group => {
+        group.values.forEach(year => {
+            allYears.add(year.key);
+            allValues.push(year.value);
+        });
+    });
+
+    const uniqueYears = Array.from(allYears).sort((a, b) => a - b);
+    x.domain(d3.extent(uniqueYears));
+    y.domain([0, d3.max(allValues)]);
 
     const line = d3.line()
         .x(d => x(d.key))
         .y(d => y(d.value));
 
-    const color = d3.scaleOrdinal(d3.schemeCategory10); // Color scheme for different work settings
-
-    svg.selectAll(".line")
-        .data(groupedData)
-        .enter().append("path")
-        .attr("class", "line")
-        .attr("d", d => line(d.values))
-        .attr("fill", "none")
-        .attr("stroke", d => color(d.workSetting))
-        .attr("stroke-width", 2)
-        .attr("id", d => `line-${d.workSetting}`); // Add ID for each line
+    nestedData.forEach(group => {
+        svg.append("path")
+            .datum(group.values)
+            .attr("class", "line")
+            .attr("d", line)
+            .attr("fill", "none")
+            .attr("stroke", color(group.workSetting))
+            .attr("stroke-width", 2)
+            .attr("id", `line-${group.workSetting}`); // Add ID for each line
+    });
 
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y"))); // Format the ticks to display years
+        .call(d3.axisBottom(x).ticks(uniqueYears.length).tickFormat(d3.format("d")));
 
     svg.append("g")
         .attr("class", "y axis")
@@ -360,7 +367,7 @@ function createLineChart(data, xField, yField, selector) {
 
     // Add legend
     const legend = svg.selectAll(".legend")
-        .data(groupedData)
+        .data(nestedData)
         .enter().append("g")
         .attr("class", "legend")
         .attr("transform", (d, i) => `translate(0,${i * 20})`);
@@ -378,4 +385,3 @@ function createLineChart(data, xField, yField, selector) {
         .attr("text-anchor", "end")
         .text(d => d.workSetting);
 }
-
