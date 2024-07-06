@@ -1,6 +1,6 @@
 // Configurable Variables
-const width = 960;
-const height = 500;
+const width = 2000;
+const height = 1200;
 const geoJsonUrl = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson";
 const csvUrl = "jobs_in_data_with_iso_updated.csv";
 const countryCodeColumn = "ISO";
@@ -11,9 +11,18 @@ const svg = d3.select("#map").append("svg")
     .attr("width", width)
     .attr("height", height);
 
+// Add title
+svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", 30)
+    .attr("text-anchor", "middle")
+    .style("font-size", "24px")
+    .style("font-weight", "bold")
+    .text("What is the typical salary of a Data Scientist?");
+
 // Define a projection and path generator
 const projection = d3.geoNaturalEarth1()
-    .scale(160)
+    .scale(300)
     .translate([width / 2, height / 2]);
 
 const path = d3.geoPath().projection(projection);
@@ -78,7 +87,7 @@ Promise.all([
         .on("mouseover", function(event, d) {
             const salary = salaryMap.get(d.id);
             tooltip.transition().duration(200).style("opacity", .9);
-            tooltip.html(d.properties.name + "<br/>" + (salary ? `$${salary.toFixed(2)}` : "No data"))
+            tooltip.html(d.properties.name + "<br/>" + "Avg Salary: " + (salary ? `$${salary.toFixed(0)}` : "No data"))
                 .style("left", (event.pageX) + "px")
                 .style("top", (event.pageY - 28) + "px");
         })
