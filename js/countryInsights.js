@@ -16,6 +16,7 @@ document.getElementById('country-title').innerText = `Country Insights: ${countr
 // List to keep track of selected job categories
 let selectedJobCategories = new Set();
 
+let selectedCompanySizes = new Set();
 
 // Load the data and create visualizations
 d3.csv("data/jobs_in_data_with_iso_updated.csv").then(data => {
@@ -135,7 +136,15 @@ function createBarChart(data, valueField, categoryField, selector, topN) {
 function updateVisualizations() {
     // Load the data and create visualizations
     d3.csv("data/jobs_in_data_with_iso_updated.csv").then(data => {
-        let countryData = data.filter(d => d.ISO === country && selectedJobCategories.has(d.job_category));
+        let countryData = data.filter(d => d.ISO === country);
+
+        if (selectedJobCategories.size > 0) {
+            countryData = countryData.filter(d => selectedJobCategories.has(d.job_category));
+        }
+
+        if (selectedCompanySizes.size > 0) {
+            countryData = countryData.filter(d => selectedCompanySizes.has(d.company_size));
+        }
 
         // Clear existing visualizations
         d3.selectAll('#bar-chart-2 svg').remove();
@@ -156,7 +165,6 @@ function updateVisualizations() {
         createLineChart(countryData, 'work_year', 'salary_in_usd', '#line-chart');
     });
 }
-
 
 function resetVisualizations() {
     d3.csv("data/jobs_in_data_with_iso_updated.csv").then(data => {
@@ -183,8 +191,8 @@ function resetVisualizations() {
 }
 
 
-// Repeat the margin adjustment for other chart functions
 
+// Repeat the margin adjustment for other chart functions
 function createGroupedBarChart(data, groupField, valueField, selector) {
     const groupedData = Array.from(d3.group(data, d => d[groupField]), ([key, value]) => ({
         key,
@@ -216,6 +224,22 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
         .attr("y", height) // Start bars from the bottom of the chart
         .attr("height", 0) // Start bars with zero height for animation
         .attr("fill", "#1BE2E8") // Set bar color to #1BE2E8
+        .on("click", (event, d) => {
+            // Toggle selection
+            if (selectedCompanySizes.has(d.key)) {
+                selectedCompanySizes.delete(d.key);
+            } else {
+                selectedCompanySizes.add(d.key);
+            }
+            d3.select(event.currentTarget)
+                .attr("fill", selectedCompanySizes.has(d.key) ? "orange" : "#1BE2E8");
+
+            if (selectedCompanySizes.size === 0) {
+                resetVisualizations();
+            } else {
+                updateVisualizations();
+            }
+        })
         .transition()
         .duration(1000) // Duration of transition in milliseconds
         .attr("y", d => y(d.value))
