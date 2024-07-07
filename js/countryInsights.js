@@ -271,7 +271,7 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
     y.domain([0, d3.max(groupedData, d => d.value)]);
 
     // Define a custom color scale with hardcoded colors
-    const colors = groupField === 'company_size' ? ["#6E2C00", "#85C1E9", "#AF7AC5"] : ["#78909C", "#ff6347", "#339999"];
+    const colors = groupField === 'company_size' ? ["#6E2C00", "#85C1E9", "#AF7AC5", "#BBB204", "0468BB" ] : ["#78909C", "#ff6347", "#339999", "#86B2D7", "D0D786"];
     const colorScale = d3.scaleOrdinal().domain(groupedData.map(d => d.key)).range(colors);
 
 
