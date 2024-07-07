@@ -254,7 +254,18 @@ function createBoxPlot(data, groupField, valueField, selector) {
 
     const boxWidth = x.bandwidth() * 0.5;
 
-    // Add boxes
+    // Create a tooltip div and hide it initially
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("padding", "10px")
+        .style("background", "rgba(0,0,0,0.7)")
+        .style("color", "#fff")
+        .style("border-radius", "5px")
+        .style("pointer-events", "none")
+        .style("opacity", 0);
+
+    // Add boxes with hover effect
     svg.selectAll(".box")
         .data(boxPlotData)
         .enter().append("rect")
@@ -264,7 +275,27 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("y", d => y(d.q3))
         .attr("height", d => y(d.q1) - y(d.q3))
         .attr("stroke", "black")
-        .attr("fill", "#999999"); // Grey color for boxes
+        .attr("fill", "#999999") // Grey color for boxes
+        .on("mouseover", (event, d) => {
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            tooltip.html(
+                `Experience Level: ${d.key}<br>
+                Min: $${d.min}<br>
+                Q1: $${d.q1}<br>
+                Median: $${d.median}<br>
+                Q3: $${d.q3}<br>
+                Max: $${d.max}`
+            )
+            .style("left", (event.pageX + 5) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", (d) => {
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
 
     // Add median lines
     svg.selectAll(".median")
@@ -320,7 +351,7 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("fill", "black")
         .attr("opacity", 0)
         .transition() // Add transition for fade-in effect
-        .duration(2500)
+        .duration(1000)
         .attr("opacity", 0.7);
 
     // Add X axis label
@@ -342,6 +373,7 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .style("font-size", "14px")
         .text("Average Salary in USD");
 }
+
 
 function createLineChart(data, xField, yField, selector) {
     // Group the data by work_setting and then by work_year, calculating the average salary
