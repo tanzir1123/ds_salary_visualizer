@@ -9,20 +9,18 @@ function getUrlParameter(name) {
 // Get the country code from the URL
 const country = getUrlParameter('country');
 
-// Set the country title
-document.getElementById('country-title').innerText = `Country Insights: ${country}`;
-
-
-// List to keep track of selected job categories
-let selectedJobCategories = new Set();
-
-let selectedCompanySizes = new Set();
-
 // Load the data and create visualizations
 d3.csv("data/jobs_in_data_with_iso_updated.csv").then(data => {
-    let countryData = data.filter(d => d.ISO === country);
+    // Filter the data for the selected country
+    const countryData = data.filter(d => d.ISO === country);
+    
+    // Get the country name from the dataset
+    const countryName = countryData.length > 0 ? countryData[0].company_location : country;
 
-    // Visualization 1: Top 5 average salary by Job Title
+    // Set the country title
+    document.getElementById('country-title').innerText = `Country Insights: ${countryName}`;
+
+    // Visualization 1: Top 5 average salary by Job Category
     createBarChart(countryData, 'salary_in_usd', 'job_category', '#bar-chart-1', 5);
 
     // Visualization 2: Company Size Avg Salary
@@ -37,6 +35,7 @@ d3.csv("data/jobs_in_data_with_iso_updated.csv").then(data => {
     // Visualization 5: Line Chart for Work Year
     createLineChart(countryData, 'work_year', 'salary_in_usd', '#line-chart');
 });
+
 
 function createBarChart(data, valueField, categoryField, selector, topN) {
     const avgSalaryByCategory = Array.from(d3.group(data, d => d[categoryField]), ([key, value]) => ({
