@@ -24,6 +24,12 @@
         svg {
             overflow: visible;
         }
+        .instruction-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 20px 0;
+            background-color: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -36,6 +42,18 @@
     <div class="row">
         <div id="box-plot" class="chart"></div>
         <div id="line-chart" class="chart"></div>
+    </div>
+    <div class="instruction-box">
+        <h2>Understanding the Box Plot</h2>
+        <p>The Box Plot provides a graphical summary of the distribution of a dataset. It shows the following:</p>
+        <ul>
+            <li><strong>Minimum (Min):</strong> The smallest data point excluding outliers.</li>
+            <li><strong>First Quartile (Q1):</strong> The 25th percentile of the data.</li>
+            <li><strong>Median:</strong> The middle value of the data.</li>
+            <li><strong>Third Quartile (Q3):</strong> The 75th percentile of the data.</li>
+            <li><strong>Maximum (Max):</strong> The largest data point excluding outliers.</li>
+        </ul>
+        <p>These five-number summaries provide a concise statistical summary of the data distribution.</p>
     </div>
 </body>
 </html>

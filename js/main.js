@@ -98,4 +98,36 @@ Promise.all([
         .style("font-size", "24px")
         .style("font-weight", "bold")
         .text("What is the typical salary of a Data Scientist?");
+
+
+    // Add color legend
+    const legendWidth = 300;
+    const legendHeight = 20;
+    const legendPadding = 10;
+    const legendMargin = {top: 20, right: 20, bottom: 0, left: 0};
+
+    const legendSvg = svg.append("g")
+        .attr("transform", `translate(${width - legendWidth - legendMargin.right}, ${legendMargin.top})`);
+
+    const legendScale = d3.scaleLinear()
+        .domain([minSalary, maxSalary])
+        .range([0, legendWidth]);
+
+    const legendAxis = d3.axisBottom(legendScale)
+        .ticks(5)
+        .tickFormat(d3.format(".2s"));
+
+    legendSvg.append("g")
+        .selectAll("rect")
+        .data(d3.range(minSalary, maxSalary, (maxSalary - minSalary) / legendWidth))
+        .enter().append("rect")
+        .attr("x", d => legendScale(d))
+        .attr("y", 0)
+        .attr("width", legendWidth / legendWidth)
+        .attr("height", legendHeight)
+        .attr("fill", d => color(d));
+
+    legendSvg.append("g")
+        .attr("transform", `translate(0, ${legendHeight})`)
+        .call(legendAxis);
 });

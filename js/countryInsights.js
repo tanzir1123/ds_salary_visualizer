@@ -528,7 +528,7 @@ function createLineChart(data, xField, yField, selector) {
         })).sort((a, b) => a.key - b.key) // Sort values by xField
     }));
 
-    const margin = { top: 20, right: 20, bottom: 60, left: 100 };
+    const margin = { top: 20, right: 120, bottom: 60, left: 100 }; // Increased right margin for legend
     const width = document.querySelector(selector).clientWidth - margin.left - margin.right;
     const height = document.querySelector(selector).clientHeight - margin.top - margin.bottom;
 
@@ -620,18 +620,18 @@ function createLineChart(data, xField, yField, selector) {
         .data(nestedData)
         .enter().append("g")
         .attr("class", "legend")
-        .attr("transform", (d, i) => `translate(0,${i * 20})`);
+        .attr("transform", (d, i) => `translate(${width + 15},${i * 20})`); // Move legend to the right
 
     legend.append("rect")
-        .attr("x", width - 18)
+        .attr("x", 0)
         .attr("width", 18)
         .attr("height", 18)
         .style("fill", d => color(d.workSetting));
 
     legend.append("text")
-        .attr("x", width - 24)
+        .attr("x", 24)
         .attr("y", 9)
         .attr("dy", ".35em")
-        .attr("text-anchor", "end")
+        .attr("text-anchor", "start")
         .text(d => d.workSetting);
 }
