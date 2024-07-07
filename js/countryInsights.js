@@ -12,11 +12,16 @@ const country = getUrlParameter('country');
 // Set the country title
 document.getElementById('country-title').innerText = `Country Insights: ${country}`;
 
+
+// List to keep track of selected job categories
+let selectedJobCategories = new Set();
+
+
 // Load the data and create visualizations
 d3.csv("data/jobs_in_data_with_iso_updated.csv").then(data => {
     let countryData = data.filter(d => d.ISO === country);
 
-    // Visualization 1: Top 5 average salary by Job Category
+    // Visualization 1: Top 5 average salary by Job Title
     createBarChart(countryData, 'salary_in_usd', 'job_category', '#bar-chart-1', 5);
 
     // Visualization 2: Company Size Avg Salary
@@ -32,7 +37,6 @@ d3.csv("data/jobs_in_data_with_iso_updated.csv").then(data => {
     createLineChart(countryData, 'work_year', 'salary_in_usd', '#line-chart');
 });
 
-// Helper functions for creating charts
 function createBarChart(data, valueField, categoryField, selector, topN) {
     const avgSalaryByCategory = Array.from(d3.group(data, d => d[categoryField]), ([key, value]) => ({
         key,
@@ -66,7 +70,20 @@ function createBarChart(data, valueField, categoryField, selector, topN) {
         .attr("height", y.bandwidth())
         .attr("fill", "purple") // Set bar color to purple
         .on("click", (event, d) => {
-            updateVisualizations(d.key);
+            // Toggle selection
+            if (selectedJobCategories.has(d.key)) {
+                selectedJobCategories.delete(d.key);
+            } else {
+                selectedJobCategories.add(d.key);
+            }
+            d3.select(event.currentTarget)
+                .attr("fill", selectedJobCategories.has(d.key) ? "orange" : "purple");
+
+            if (selectedJobCategories.size === 0) {
+                resetVisualizations();
+            } else {
+                updateVisualizations();
+            }
         })
         .transition()
         .duration(1000) // Duration of transition in milliseconds
@@ -115,10 +132,10 @@ function createBarChart(data, valueField, categoryField, selector, topN) {
         .text("Job Category");
 }
 
-function updateVisualizations(selectedJobCategory) {
+function updateVisualizations() {
     // Load the data and create visualizations
     d3.csv("data/jobs_in_data_with_iso_updated.csv").then(data => {
-        let countryData = data.filter(d => d.ISO === country && d.job_category === selectedJobCategory);
+        let countryData = data.filter(d => d.ISO === country && selectedJobCategories.has(d.job_category));
 
         // Clear existing visualizations
         d3.selectAll('#bar-chart-2 svg').remove();
@@ -141,6 +158,29 @@ function updateVisualizations(selectedJobCategory) {
 }
 
 
+function resetVisualizations() {
+    d3.csv("data/jobs_in_data_with_iso_updated.csv").then(data => {
+        let countryData = data.filter(d => d.ISO === country);
+
+        // Clear existing visualizations
+        d3.selectAll('#bar-chart-2 svg').remove();
+        d3.selectAll('#bar-chart-3 svg').remove();
+        d3.selectAll('#box-plot svg').remove();
+        d3.selectAll('#line-chart svg').remove();
+
+        // Visualization 2: Company Size Avg Salary
+        createGroupedBarChart(countryData, 'company_size', 'salary_in_usd', '#bar-chart-2');
+
+        // Visualization 3: Experience Level Avg Salary
+        createGroupedBarChart(countryData, 'experience_level', 'salary_in_usd', '#bar-chart-3');
+
+        // Visualization 4: Box Plot for Experience Level
+        createBoxPlot(countryData, 'experience_level', 'salary_in_usd', '#box-plot');
+
+        // Visualization 5: Line Chart for Work Year
+        createLineChart(countryData, 'work_year', 'salary_in_usd', '#line-chart');
+    });
+}
 
 
 // Repeat the margin adjustment for other chart functions
