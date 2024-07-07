@@ -206,8 +206,12 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
         .text("Average Salary in USD");
 }
 
-
 function createBoxPlot(data, groupField, valueField, selector) {
+    if (!data || data.length === 0) {
+        console.warn(`No data available for selector ${selector}`);
+        return;
+    }
+
     const boxPlotData = Array.from(d3.group(data, d => d[groupField]), ([key, value]) => {
         const sortedValues = value.map(d => +d[valueField]).sort(d3.ascending);
         const q1 = d3.quantile(sortedValues, 0.25);
@@ -215,7 +219,7 @@ function createBoxPlot(data, groupField, valueField, selector) {
         const q3 = d3.quantile(sortedValues, 0.75);
         const min = sortedValues[0];
         const max = sortedValues[sortedValues.length - 1];
-        return { key, q1, median, q3, min, max };
+        return { key, q1, median, q3, min, max, values: sortedValues };
     });
 
     const margin = { top: 20, right: 20, bottom: 60, left: 100 };
@@ -279,24 +283,6 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("y2", d => y(d.max))
         .attr("stroke", "black");
 
-    // Add circles at the ends of the whiskers
-    svg.selectAll(".whisker-circle")
-        .data(boxPlotData)
-        .enter().append("circle")
-        .attr("class", "whisker-circle")
-        .attr("cx", d => x(d.key) + x.bandwidth() / 2)
-        .attr("cy", d => y(d.min))
-        .attr("r", 3)
-        .attr("fill", "black");
-
-    svg.selectAll(".whisker-circle-top")
-        .data(boxPlotData)
-        .enter().append("circle")
-        .attr("class", "whisker-circle-top")
-        .attr("cx", d => x(d.key) + x.bandwidth() / 2)
-        .attr("cy", d => y(d.max))
-        .attr("r", 3)
-        .attr("fill", "black");
 
     // Add lines at the ends of the whiskers
     svg.selectAll(".whisker-line-min")
@@ -319,6 +305,17 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("y2", d => y(d.max))
         .attr("stroke", "black");
 
+    // Add individual data points
+    svg.selectAll(".data-point")
+        .data(data)
+        .enter().append("circle")
+        .attr("class", "data-point")
+        .attr("cx", d => x(d[groupField]) + x.bandwidth() / 2)
+        .attr("cy", d => y(d[valueField]))
+        .attr("r", 3)
+        .attr("fill", "black")
+        .attr("opacity", 0.7);
+
     // Add X axis label
     svg.append("text")
         .attr("class", "x axis-label")
@@ -338,7 +335,6 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .style("font-size", "14px")
         .text(valueField);
 }
-
 
 function createLineChart(data, xField, yField, selector) {
     // Group the data by work_setting and then by work_year, calculating the average salary
