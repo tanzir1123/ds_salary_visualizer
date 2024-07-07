@@ -318,16 +318,19 @@ function createLineChart(data, xField, yField, selector) {
         });
     });
 
+    // Assuming uniqueYears is correctly obtained
     const uniqueYears = Array.from(allYears).sort((a, b) => a - b);
-    x.domain(d3.extent(uniqueYears));
+    x.domain(d3.extent(uniqueYears)); // Set domain to the extent of unique years
     y.domain([0, d3.max(allValues)]);
 
+    // Define the line generator function
     const line = d3.line()
-        .x(d => x(d.key))
+        .x(d => x(d.key))  // Ensure key is correctly mapped to X scale
         .y(d => y(d.value));
 
+    // Add paths for each group
     nestedData.forEach(group => {
-        svg.append("path")
+        const path = svg.append("path")
             .datum(group.values)
             .attr("class", "line")
             .attr("d", line)
@@ -335,12 +338,24 @@ function createLineChart(data, xField, yField, selector) {
             .attr("stroke", color(group.workSetting))
             .attr("stroke-width", 2)
             .attr("id", `line-${group.workSetting}`); // Add ID for each line
+
+        // Animate the path drawing
+        const totalLength = path.node().getTotalLength();
+        path.attr("stroke-dasharray", `${totalLength} ${totalLength}`)
+            .attr("stroke-dashoffset", totalLength)
+            .transition()
+            .duration(2000)
+            .ease(d3.easeLinear)
+            .attr("stroke-dashoffset", 0);
     });
 
+    // Add the X-axis
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x).ticks(uniqueYears.length).tickFormat(d3.format("d")));
+        .call(d3.axisBottom(x)
+            .tickValues(uniqueYears)  // Use unique years as tick values
+            .tickFormat(d3.format("d")));  // Format ticks as integers
 
     svg.append("g")
         .attr("class", "y axis")
