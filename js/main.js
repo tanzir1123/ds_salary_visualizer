@@ -1,6 +1,6 @@
 // Configurable Variables
-const width = 960;
-const height = 500;
+const width = 2000;
+const height = 1200;
 const geoJsonUrl = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson";
 const csvUrl = "data/jobs_in_data_with_iso_updated.csv";
 const countryCodeColumn = "ISO";
@@ -11,9 +11,10 @@ const svg = d3.select("#map").append("svg")
     .attr("width", width)
     .attr("height", height);
 
+
 // Define a projection and path generator
 const projection = d3.geoNaturalEarth1()
-    .scale(160)
+    .scale(300)
     .translate([width / 2, height / 2]);
 
 const path = d3.geoPath().projection(projection);
@@ -96,5 +97,5 @@ Promise.all([
         .attr("text-anchor", "middle")
         .style("font-size", "24px")
         .style("font-weight", "bold")
-        .text("Average Salary of Data Scientists by Country");
+        .text("What is the typical salary of a Data Scientist?");
 });
