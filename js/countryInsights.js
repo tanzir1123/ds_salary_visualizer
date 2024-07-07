@@ -212,6 +212,11 @@ function createBoxPlot(data, groupField, valueField, selector) {
         return;
     }
 
+    // Define the colors for whiskers based on experience levels
+    const colorScale = d3.scaleOrdinal()
+        .domain(data.map(d => d[groupField]))
+        .range(d3.schemeCategory10);
+
     const boxPlotData = Array.from(d3.group(data, d => d[groupField]), ([key, value]) => {
         const sortedValues = value.map(d => +d[valueField]).sort(d3.ascending);
         const q1 = d3.quantile(sortedValues, 0.25);
@@ -259,7 +264,7 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("y", d => y(d.q3))
         .attr("height", d => y(d.q1) - y(d.q3))
         .attr("stroke", "black")
-        .attr("fill", "white");
+        .attr("fill", "#999999"); // Grey color for boxes
 
     // Add median lines
     svg.selectAll(".median")
@@ -281,8 +286,7 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("x2", d => x(d.key) + x.bandwidth() / 2)
         .attr("y1", d => y(d.min))
         .attr("y2", d => y(d.max))
-        .attr("stroke", "black");
-
+        .attr("stroke", d => colorScale(d.key)); // Color whiskers based on experience level
 
     // Add lines at the ends of the whiskers
     svg.selectAll(".whisker-line-min")
@@ -293,7 +297,7 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("x2", d => x(d.key) + (x.bandwidth() + boxWidth) / 2)
         .attr("y1", d => y(d.min))
         .attr("y2", d => y(d.min))
-        .attr("stroke", "black");
+        .attr("stroke", d => colorScale(d.key)); // Color whisker ends based on experience level
 
     svg.selectAll(".whisker-line-max")
         .data(boxPlotData)
@@ -303,9 +307,9 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("x2", d => x(d.key) + (x.bandwidth() + boxWidth) / 2)
         .attr("y1", d => y(d.max))
         .attr("y2", d => y(d.max))
-        .attr("stroke", "black");
+        .attr("stroke", d => colorScale(d.key)); // Color whisker ends based on experience level
 
-    // Add individual data points
+    // Add individual data points with fade-in animation
     svg.selectAll(".data-point")
         .data(data)
         .enter().append("circle")
@@ -314,6 +318,9 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("cy", d => y(d[valueField]))
         .attr("r", 3)
         .attr("fill", "black")
+        .attr("opacity", 0)
+        .transition() // Add transition for fade-in effect
+        .duration(2500)
         .attr("opacity", 0.7);
 
     // Add X axis label
@@ -323,7 +330,7 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("y", height + margin.bottom - 10) // Position below the X axis
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
-        .text(groupField);
+        .text("Experience Level");
 
     // Add Y axis label
     svg.append("text")
@@ -333,7 +340,7 @@ function createBoxPlot(data, groupField, valueField, selector) {
         .attr("y", -margin.left + 20) // Position to the left of the Y axis
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
-        .text(valueField);
+        .text("Average Salary in USD");
 }
 
 function createLineChart(data, xField, yField, selector) {
