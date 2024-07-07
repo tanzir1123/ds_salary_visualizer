@@ -71,6 +71,11 @@ function createBarChart(data, valueField, categoryField, selector, topN) {
     x.domain([0, d3.max(sortedData, d => +d.value)]);
     y.domain(sortedData.map(d => d.key));
 
+    // Define a color scale using a clear and captivating color palette
+    const colorScale = d3.scaleOrdinal()
+        .domain(sortedData.map(d => d.key))
+        .range(["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#808000"]);
+
     svg.selectAll(".bar")
         .data(sortedData)
         .enter().append("rect")
@@ -78,7 +83,7 @@ function createBarChart(data, valueField, categoryField, selector, topN) {
         .attr("width", 0) // Start with zero width for animation
         .attr("y", d => y(d.key))
         .attr("height", y.bandwidth())
-        .attr("fill", "purple") // Set bar color to purple
+        .attr("fill", d => colorScale(d.key)) // Assign different colors to each bar
         .on("click", (event, d) => {
             // Toggle selection
             if (selectedJobCategories.has(d.key)) {
@@ -87,7 +92,7 @@ function createBarChart(data, valueField, categoryField, selector, topN) {
                 selectedJobCategories.add(d.key);
             }
             d3.select(event.currentTarget)
-                .attr("fill", selectedJobCategories.has(d.key) ? "orange" : "purple");
+                .attr("fill", selectedJobCategories.has(d.key) ? "orange" : colorScale(d.key));
 
             if (selectedJobCategories.size === 0) {
                 resetVisualizations();
@@ -243,8 +248,6 @@ function resetVisualizations() {
 }
 
 
-
-// Repeat the margin adjustment for other chart functions
 function createGroupedBarChart(data, groupField, valueField, selector) {
     const groupedData = Array.from(d3.group(data, d => d[groupField]), ([key, value]) => ({
         key,
@@ -267,15 +270,20 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
     x.domain(groupedData.map(d => d.key));
     y.domain([0, d3.max(groupedData, d => d.value)]);
 
+    // Define a custom color scale with hardcoded colors
+    const colors = groupField === 'company_size' ? ["#6E2C00", "#85C1E9", "#AF7AC5"] : ["#78909C", "#ff6347", "#339999"];
+    const colorScale = d3.scaleOrdinal().domain(groupedData.map(d => d.key)).range(colors);
+
+
     svg.selectAll(".bar")
         .data(groupedData)
         .enter().append("rect")
         .attr("class", "bar")
         .attr("x", d => x(d.key))
         .attr("width", x.bandwidth())
-        .attr("y", height) // Start bars from the bottom of the chart
-        .attr("height", 0) // Start bars with zero height for animation
-        .attr("fill", "#1BE2E8") // Set bar color to #1BE2E8
+        .attr("y", height)
+        .attr("height", 0)
+        .attr("fill", d => colorScale(d.key)) // Assign different colors to each bar
         .on("click", (event, d) => {
             // Toggle selection
             if (selectedCompanySizes.has(d.key)) {
@@ -284,7 +292,7 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
                 selectedCompanySizes.add(d.key);
             }
             d3.select(event.currentTarget)
-                .attr("fill", selectedCompanySizes.has(d.key) ? "orange" : "#1BE2E8");
+                .attr("fill", selectedCompanySizes.has(d.key) ? "orange" : colorScale(d.key));
 
             if (selectedCompanySizes.size === 0) {
                 resetVisualizations();
@@ -293,7 +301,7 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
             }
         })
         .transition()
-        .duration(1000) // Duration of transition in milliseconds
+        .duration(1000)
         .attr("y", d => y(d.value))
         .attr("height", d => height - y(d.value));
 
@@ -303,11 +311,11 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
         .enter().append("text")
         .attr("class", "label")
         .attr("x", d => x(d.key) + x.bandwidth() / 2)
-        .attr("y", height) // Start labels from the bottom of the chart
+        .attr("y", height)
         .attr("text-anchor", "middle")
-        .text(d => `$${d.value.toFixed(0)}`) // Initial text before transition
+        .text(d => `$${d.value.toFixed(0)}`)
         .transition()
-        .duration(1000) // Duration of transition in milliseconds
+        .duration(1000)
         .attr("y", d => y(d.value) - 5);
 
     svg.append("g")
@@ -348,6 +356,7 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
         .style("font-size", "14px")
         .text("Average Salary in USD");
 }
+
 
 function createBoxPlot(data, groupField, valueField, selector) {
     if (!data || data.length === 0) {
