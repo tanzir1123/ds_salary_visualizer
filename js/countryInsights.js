@@ -343,7 +343,7 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
         .attr("class", "y axis-label")
         .attr("transform", "rotate(-90)")
         .attr("x", -height / 2)
-        .attr("y", -margin.left + 20) // Position to the left of the Y axis
+        .attr("y", -margin.left + 80) // Position to the left of the Y axis
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
         .text("Average Salary in USD");
