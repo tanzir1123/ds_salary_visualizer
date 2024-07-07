@@ -207,7 +207,6 @@ function createGroupedBarChart(data, groupField, valueField, selector) {
 }
 
 
-
 function createBoxPlot(data, groupField, valueField, selector) {
     const boxPlotData = Array.from(d3.group(data, d => d[groupField]), ([key, value]) => {
         const sortedValues = value.map(d => +d[valueField]).sort(d3.ascending);
@@ -219,7 +218,7 @@ function createBoxPlot(data, groupField, valueField, selector) {
         return { key, q1, median, q3, min, max };
     });
 
-    const margin = { top: 20, right: 20, bottom: 30, left: 100 };
+    const margin = { top: 20, right: 20, bottom: 60, left: 100 };
     const width = document.querySelector(selector).clientWidth - margin.left - margin.right;
     const height = document.querySelector(selector).clientHeight - margin.top - margin.bottom;
 
@@ -246,42 +245,100 @@ function createBoxPlot(data, groupField, valueField, selector) {
 
     const boxWidth = x.bandwidth() * 0.5;
 
+    // Add boxes
     svg.selectAll(".box")
         .data(boxPlotData)
         .enter().append("rect")
         .attr("class", "box")
-        .attr("x", d => x(d.key) - boxWidth / 2)
+        .attr("x", d => x(d.key) + (x.bandwidth() - boxWidth) / 2) // Center the box
         .attr("width", boxWidth)
         .attr("y", d => y(d.q3))
-        .attr("height", d => y(d.q1) - y(d.q3));
+        .attr("height", d => y(d.q1) - y(d.q3))
+        .attr("stroke", "black")
+        .attr("fill", "white");
 
+    // Add median lines
     svg.selectAll(".median")
         .data(boxPlotData)
         .enter().append("line")
         .attr("class", "median")
-        .attr("x1", d => x(d.key) - boxWidth / 2)
-        .attr("x2", d => x(d.key) + boxWidth / 2)
+        .attr("x1", d => x(d.key) + (x.bandwidth() - boxWidth) / 2)
+        .attr("x2", d => x(d.key) + (x.bandwidth() + boxWidth) / 2)
         .attr("y1", d => y(d.median))
-        .attr("y2", d => y(d.median));
+        .attr("y2", d => y(d.median))
+        .attr("stroke", "black");
 
-    svg.selectAll(".min")
+    // Add whiskers
+    svg.selectAll(".whisker")
         .data(boxPlotData)
         .enter().append("line")
-        .attr("class", "min")
-        .attr("x1", d => x(d.key) - boxWidth / 2)
-        .attr("x2", d => x(d.key) + boxWidth / 2)
+        .attr("class", "whisker")
+        .attr("x1", d => x(d.key) + x.bandwidth() / 2)
+        .attr("x2", d => x(d.key) + x.bandwidth() / 2)
         .attr("y1", d => y(d.min))
-        .attr("y2", d => y(d.min));
+        .attr("y2", d => y(d.max))
+        .attr("stroke", "black");
 
-    svg.selectAll(".max")
+    // Add circles at the ends of the whiskers
+    svg.selectAll(".whisker-circle")
+        .data(boxPlotData)
+        .enter().append("circle")
+        .attr("class", "whisker-circle")
+        .attr("cx", d => x(d.key) + x.bandwidth() / 2)
+        .attr("cy", d => y(d.min))
+        .attr("r", 3)
+        .attr("fill", "black");
+
+    svg.selectAll(".whisker-circle-top")
+        .data(boxPlotData)
+        .enter().append("circle")
+        .attr("class", "whisker-circle-top")
+        .attr("cx", d => x(d.key) + x.bandwidth() / 2)
+        .attr("cy", d => y(d.max))
+        .attr("r", 3)
+        .attr("fill", "black");
+
+    // Add lines at the ends of the whiskers
+    svg.selectAll(".whisker-line-min")
         .data(boxPlotData)
         .enter().append("line")
-        .attr("class", "max")
-        .attr("x1", d => x(d.key) - boxWidth / 2)
-        .attr("x2", d => x(d.key) + boxWidth / 2)
+        .attr("class", "whisker-line-min")
+        .attr("x1", d => x(d.key) + (x.bandwidth() - boxWidth) / 2)
+        .attr("x2", d => x(d.key) + (x.bandwidth() + boxWidth) / 2)
+        .attr("y1", d => y(d.min))
+        .attr("y2", d => y(d.min))
+        .attr("stroke", "black");
+
+    svg.selectAll(".whisker-line-max")
+        .data(boxPlotData)
+        .enter().append("line")
+        .attr("class", "whisker-line-max")
+        .attr("x1", d => x(d.key) + (x.bandwidth() - boxWidth) / 2)
+        .attr("x2", d => x(d.key) + (x.bandwidth() + boxWidth) / 2)
         .attr("y1", d => y(d.max))
-        .attr("y2", d => y(d.max));
+        .attr("y2", d => y(d.max))
+        .attr("stroke", "black");
+
+    // Add X axis label
+    svg.append("text")
+        .attr("class", "x axis-label")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom - 10) // Position below the X axis
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text(groupField);
+
+    // Add Y axis label
+    svg.append("text")
+        .attr("class", "y axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -margin.left + 20) // Position to the left of the Y axis
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text(valueField);
 }
+
 
 function createLineChart(data, xField, yField, selector) {
     // Group the data by work_setting and then by work_year, calculating the average salary
